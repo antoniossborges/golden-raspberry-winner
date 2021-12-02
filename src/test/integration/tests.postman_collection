@@ -1,0 +1,44 @@
+{
+	"variables": [],
+	"info": {
+		"name": "tests",
+		"_postman_id": "a7a24d38-c193-d335-33bb-28edbaadb9bf",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "localhost:8080/api/winners",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"var jsonData = JSON.parse(responseBody);",
+							"tests[\"Check length in min \"] = jsonData.min.length > 0;",
+							"tests[\"Check name in min list\"] = jsonData.min[0].producerName === \"Joel Silver\";",
+							"tests[\"Check previousWin in min list\"] = jsonData.min[0].previousWin === 1990;",
+							"tests[\"Check followingWin in min list\"] = jsonData.min[0].followingWin === 1991;",
+							"",
+							"tests[\"Check length in max \"] = jsonData.max.length > 0;",
+							"tests[\"Check name in max list\"] = jsonData.max[0].producerName === \"Matthew Vaughn\";",
+							"tests[\"Check previousWin in max list\"] = jsonData.max[0].previousWin === 2002;",
+							"tests[\"Check followingWin in max list\"] = jsonData.max[0].followingWin === 2015;",
+							"",
+							""
+						]
+					}
+				}
+			],
+			"request": {
+				"url": "localhost:8080/api/winners",
+				"method": "GET",
+				"header": [],
+				"body": {},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
