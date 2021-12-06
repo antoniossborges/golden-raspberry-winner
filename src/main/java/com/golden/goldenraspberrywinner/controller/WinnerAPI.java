@@ -20,7 +20,7 @@ public class WinnerAPI {
 
     @GetMapping("/winners")
     public WinnersList teste() {
-        loadDataBase.loadDataBase();
+        loadDataBase.loadDataBase(false);
         return winnersService.findWinnersList();
     }
 

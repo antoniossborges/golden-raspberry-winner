@@ -3,9 +3,9 @@ package com.golden.goldenraspberrywinner.service;
 import com.golden.goldenraspberrywinner.bean.Movie;
 import com.golden.goldenraspberrywinner.bean.Winner;
 import com.golden.goldenraspberrywinner.bean.WinnersList;
+import com.golden.goldenraspberrywinner.dao.MovieDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.golden.goldenraspberrywinner.dao.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -22,14 +22,13 @@ public class WinnersService {
 
         List<Winner> winnerMultipleReward = createListOnlyMultipleWinner(winnersList);
 
-
-        Integer maxValue = winnerMultipleReward.stream()
-                .max(Comparator.comparing(Winner::getInterval)).get().getInterval();
+        Integer maxValue = winnerMultipleReward.size() > 0 ? winnerMultipleReward.stream()
+                .max(Comparator.comparing(Winner::getInterval)).get().getInterval() : 0;
 
         winners.getMax().addAll(filterIntervalByValue(winnerMultipleReward, maxValue));
 
-        Integer minValue = winnerMultipleReward.stream()
-                .min(Comparator.comparing(Winner::getInterval)).get().getInterval();
+        Integer minValue = winnerMultipleReward.size() > 0 ? winnerMultipleReward.stream()
+                .min(Comparator.comparing(Winner::getInterval)).get().getInterval() : 0;
 
         winners.getMin().addAll(filterIntervalByValue(winnerMultipleReward, minValue));
 
@@ -49,29 +48,59 @@ public class WinnersService {
         List<Movie> movies = movieDao.findByWinner(true);
 
         HashMap<String, Winner> winnersList = new HashMap<>();
+        HashMap<String, List<Integer>> winnerYear = new HashMap<>();
 
         movies.forEach(x -> {
             String[] producers = x.getProducer().getName().replace(",", ";").replace(" and ", ";").split(";");
             Arrays.stream(producers).forEach(y -> {
                 String producer = y.trim();
-
-                if (winnersList.get(producer) != null) {
-                    System.out.println(producer);
-                    Winner w = winnersList.get(producer);
-                    if (x.getYear() < w.getPreviousWin()) {
-                        w.setPreviousWin(x.getYear());
-                    } else if (x.getYear() > w.getFollowingWin()) {
-                        w.setFollowingWin(x.getYear());
-                    }
+                if (winnerYear.get(producer) != null) {
+                    winnerYear.get(producer).add(x.getYear());
                 } else {
-                    Winner w = new Winner();
-                    w.setProducerName(producer);
-                    w.setPreviousWin(x.getYear());
-                    w.setFollowingWin(x.getYear());
-                    winnersList.put(w.getProducerName(), w);
+                    winnerYear.put(producer, new ArrayList<>());
+                    winnerYear.get(producer).add(x.getYear());
                 }
             });
         });
+
+        winnerYear.forEach((key, value) -> {
+            Collections.sort(value);
+            int count = 0;
+            for (Integer year : value) {
+                String keyTohashMap = null;
+                keyTohashMap = getKeyWithCount(key, count);
+                Winner winner = winnersList.get(keyTohashMap);
+                //verificar com 4 premios
+                if (winner != null && winner.getPreviousWin() != null && winner.getFollowingWin() == null) {
+                    Winner w = winnersList.get(keyTohashMap);
+                    w.setFollowingWin(year);
+                    count++;
+                } else if (winner != null && winner.getPreviousWin() != null && winner.getFollowingWin() != null) {
+                    Winner w = new Winner();
+                    w.setProducerName(key);
+                    w.setPreviousWin(winner.getFollowingWin());
+                    w.setFollowingWin(year);
+                    winnersList.put(w.getProducerName() + String.valueOf(count), w);
+                    count++;
+                } else {
+                    Winner w = new Winner();
+                    w.setProducerName(key);
+                    w.setPreviousWin(year);
+                    winnersList.put(keyTohashMap, w);
+                }
+            }
+        });
+
         return winnersList;
+    }
+
+    private String getKeyWithCount(String key, int count) {
+        String keyTohashMap;
+        if (count > 0) {
+            keyTohashMap = key + String.valueOf(count - 1);
+        } else {
+            keyTohashMap = key + String.valueOf(count);
+        }
+        return keyTohashMap;
     }
 }

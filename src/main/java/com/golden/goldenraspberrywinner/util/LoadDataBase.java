@@ -23,12 +23,19 @@ public class LoadDataBase {
     @Autowired
     private StudioDao studioDao;
 
+    private String path = "\\src\\main\\resources\\movielist.csv";
+
     private boolean baseIsLoaded = false;
 
-    public void loadDataBase() {
-        if (!baseIsLoaded) {
+    public void loadDataBase(boolean forceReload) {
+        if (!baseIsLoaded || forceReload) {
             try {
-                List<String[]> movies = loadCSV();
+                if(forceReload){
+                    movieDao.deleteAll();
+                    producerDao.deleteAll();
+                    studioDao.deleteAll();
+                }
+                List<String[]> movies = loadCSV(path);
 
                 movies.forEach(x -> {
                     String[] data = x;
@@ -65,12 +72,12 @@ public class LoadDataBase {
 
     }
 
-    private List loadCSV() {
+    private List loadCSV(String path) {
         boolean firstLine = true;
         List<String[]> movies = new ArrayList<>();
 
         try {
-            BufferedReader br = new BufferedReader(new FileReader(System.getProperty("user.dir") + "\\src\\main\\resources\\movielist.csv"));
+            BufferedReader br = new BufferedReader(new FileReader(System.getProperty("user.dir") + path));
             String line;
             while ((line = br.readLine()) != null) {
                 if (!firstLine) {
@@ -88,7 +95,13 @@ public class LoadDataBase {
         }
 
         return movies;
+    }
 
+    public String getPath() {
+        return path;
+    }
 
+    public void setPath(String path) {
+        this.path = path;
     }
 }

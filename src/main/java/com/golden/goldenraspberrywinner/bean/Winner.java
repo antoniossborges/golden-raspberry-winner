@@ -17,7 +17,8 @@ public class Winner {
     }
 
     public Integer getInterval() {
-        return this.getFollowingWin() - this.getPreviousWin();
+        if (this.getFollowingWin() == null) return 0;
+        else return this.getFollowingWin() - this.getPreviousWin();
     }
 
     public Integer getPreviousWin() {
